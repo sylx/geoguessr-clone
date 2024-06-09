@@ -16,7 +16,7 @@ function Header({ href, label }) {
     return (
         <header className={cls.header}>
             <div className={spbw('container', cls.container)}>
-                <p className={cls.logo}>GeoGuessr <span className="txt-min" onClick={clhd}>clone</span></p>
+                <p className={cls.logo}>GeoGuessr <span className="txt-min" onClick={clhd}>clone</span> Japan!</p>
                 <div className={cls.label}>
                     <Link to={href}>{label}</Link>
                 </div>

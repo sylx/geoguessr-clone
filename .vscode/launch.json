@@ -1,0 +1,27 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "polygon Debug",
+      "preLaunchTask": "Compile TypeScript",
+      "program": "polygon.js",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "cwd": "${workspaceFolder}",
+      "outFiles": [
+        "${workspaceFolder}/*.js",
+        "!**/node_modules/**"
+      ]
+    },
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Launch Chrome against localhost",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/src",
+      "preLaunchTask": "npm: start"
+    }
+  ]
+}

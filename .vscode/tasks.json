@@ -1,0 +1,44 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Compile TypeScript",
+      "type": "typescript",
+      "tsconfig": "tsconfig.json",
+      "presentation": {
+        "echo": true,
+        "reveal": "revealProblems",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": ["$tsc"]
+    },
+    {
+      "label": "npm: start",
+      "type": "npm",
+      "script": "start",
+      "isBackground": true,
+      "problemMatcher": [
+          {
+              "owner": "custom",
+              "pattern": [
+                  {
+                      "regexp": ".",
+                      "file": 1,
+                      "location": 2,
+                      "message": 3
+                  }
+              ],
+              "background": {
+                  "activeOnStart": true,
+                  "beginsPattern": "Compiled |Starting the development server",
+                  "endsPattern": "Compiled successfully|Failed to compile"
+              }
+          }
+      ],
+      "detail": "開発サーバーを起動します"
+    }    
+  ]
+}
