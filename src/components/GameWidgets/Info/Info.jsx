@@ -8,7 +8,7 @@ function Info({ info }) {
         <div className="widget-group">
             <div className="widget-card">
                 <img src={regionImg} alt="Region" className="img-inv" />
-                <span>{gameConfig.regionNames[info?.region || '']}</span>
+                <span>{info?.region}</span>
             </div>
         </div>
     );

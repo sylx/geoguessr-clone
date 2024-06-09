@@ -11,8 +11,26 @@ import guessPin from '../../assets/img/guess-pin.png';
 import storageConfig from '../../config/storage.json';
 import eventConfig from '../../config/events.json';
 import api from '../../config/api';
+import { useJapanRegion } from '../../utils/japan';
+import { useEffect,useState } from 'react';
 
 function GameUiGoogle({ classNames, getParams, utils, realPos, guessPos, markers, setGuessPos, setGameEnd }) {
+    const [label, setLabel] = useState({region: ''});
+    const {isLoaded,loadPref,getRegionPolygonPaths,getRegionName} = useJapanRegion();
+    
+    useEffect(() => {
+        loadPref()
+    },[loadPref]);
+
+    useEffect(() => {
+        getRegionName(getParams.region,getParams.town).then(name=>{
+            setLabel({
+                region: name,
+            });
+        });
+    },[getParams.region,getRegionName]);
+
+    if(!isLoaded) return null;
     return (
         <GameUI
             className={classNames?.game_ui}
@@ -31,6 +49,19 @@ function GameUiGoogle({ classNames, getParams, utils, realPos, guessPos, markers
                             controlSize: 30
                         }}
                         onMount={map => {
+                            
+                            getRegionPolygonPaths(getParams.region).then(geometry=>{
+                                if(!geometry) return;
+                                const bounds = new window.google.maps.LatLngBounds();
+                                geometry.forEach(path=>{
+                                    path.forEach(coord=>{
+                                        console.log(coord)
+                                        bounds.extend(coord);
+                                    })
+                                })
+                                map.fitBounds(bounds);
+                            });
+
                             map.addListener('click', evt => {
                                 const pos = evt.latLng;
                                 markers.removeAllPins();
@@ -78,9 +109,7 @@ function GameUiGoogle({ classNames, getParams, utils, realPos, guessPos, markers
                     window.dispatchEvent(new CustomEvent(eventConfig.gZoomOut));
                 }
             }}
-            infoData={{
-                region: getParams.region
-            }}
+            infoData={label}
         />
     );
 }

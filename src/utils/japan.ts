@@ -53,6 +53,22 @@ export function useJapanRegion() {
         return geometryToPolygonPaths(feature.geometry);
     }
   };
+  const getRegionName = async (prefCode: string,detailCode: string) => {
+    if (!prefData) return "";
+    const feature = prefData.features.find((feature: any) => getPrefCode(feature.properties.adm_code) === prefCode);
+    if (!feature) return "";
+    const prefName = prefCode === "00" ? "日本" : feature.properties.nam_ja;
+    let detailName = "";
+    if(detailCode === "all" || detailCode === "highpop" || detailCode === "lowpop"){
+        detailName = "";
+    }else {
+        const regionData = await fetch(`/data/town/${prefCode}.geojson`).then(res => res.json());
+        const feature = regionData.features.find((feature: any) => feature.properties.adm_code === detailCode);
+        if (!feature) return "";
+        detailName = feature.properties.laa_ja;
+    }
+    return `${prefName}${detailName}のどこか`
+  };
   const getRegionGeometry = async (prefCode: string,detailCode: string) => {
     const url = prefCode === "00" ? "/data/pref.geojson" : `/data/town/${prefCode}.geojson`;
     const regionData = await fetch(url).then(res => res.json());
@@ -134,6 +150,7 @@ export function useJapanRegion() {
     isLoaded,
     getPrefNames: useCallback(getPrefNames, [prefData]),
     getRegionNames: useCallback(getRegionNames, []),
+    getRegionName: useCallback(getRegionName, [prefData]),
     getRegionGeometry: useCallback(getRegionGeometry, [prefData]),
     getRegionPolygonPaths: useCallback(getRegionPolygonPaths, [prefData]),
     loadPref: useCallback(loadPref, [prefUrl]),
