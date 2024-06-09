@@ -3,5 +3,6 @@
   "gGoToStart": "x-game-go-to-start",
   "gZoomIn": "x-game-zoom-in",
   "gZoomOut": "x-game-zoom-out",
+  "gEject": "x-game-eject",
   "gEnd": "x-game-end"
 }

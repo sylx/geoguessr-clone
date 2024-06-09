@@ -47,7 +47,9 @@ function PanoramaGoogle({ className, getParams, utils, realPos }) {
 
                         svSvc.getPanorama({
                             location,
-                            radius: 10000
+                            radius: 10000,
+                            preference: 'nearest',
+                            source: window.google.maps.StreetViewSource.DEFAULT                            
                         }).then(({ data }) => {
                             const loc = data.location;
                             if (!data.links.length) return getRandomLocation(n);
@@ -63,6 +65,25 @@ function PanoramaGoogle({ className, getParams, utils, realPos }) {
                     window.addEventListener(eventConfig.gGoToStart, () => pano.setPosition(arrToLLObj(realPos.current)));
                     window.addEventListener(eventConfig.gZoomIn, () => setZoom(pano, 0.5, true));
                     window.addEventListener(eventConfig.gZoomOut, () => setZoom(pano, -0.5, true));
+                    window.addEventListener(eventConfig.gEject, async () => {      
+                        try{          
+                            const res = await svSvc.getPanorama({
+                                location: {
+                                    lat: pano.getLocation().latLng.lat(),
+                                    lng: pano.getLocation().latLng.lng()
+                                },
+                                radius: 10,
+                                preference: 'nearest',
+                                source: window.google.maps.StreetViewSource.OUTDOOR
+                            })
+                            pano.setPosition({
+                                lat: res.data.location.latLng.lat(),
+                                lng: res.data.location.latLng.lng()
+                            });
+                        }catch(e){
+                            console.error(e);
+                        }
+                    });
                 }}
             />
         </Wrapper>

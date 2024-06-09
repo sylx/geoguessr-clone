@@ -106,6 +106,10 @@ function GameUiGoogle({ classNames, getParams, utils, realPos, guessPos, markers
                 zoomOut() {
                     if (!realPos.current) return;
                     window.dispatchEvent(new CustomEvent(eventConfig.gZoomOut));
+                },
+                eject() {
+                    if (!realPos.current) return;
+                    window.dispatchEvent(new CustomEvent(eventConfig.gEject));
                 }
             }}
             infoData={label}

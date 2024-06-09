@@ -5,6 +5,7 @@ import quitImg from '../../../assets/img/quit.png';
 import flagImg from '../../../assets/img/flag.png';
 import zoomInImg from '../../../assets/img/zoomIn.png';
 import zoomOutImg from '../../../assets/img/zoomOut.png';
+import ejectImg from '../../../assets/img/door-open-solid.png';
 
 import cls from './buttons.module.css';
 
@@ -22,6 +23,9 @@ function Buttons({ events }) {
             </button>
             <button className={spbw('btn-game', cls.btn)} onClick={events?.zoomOut} title="Zoom Out">
                 <img src={zoomOutImg} alt="-" className="img-inv" />
+            </button>
+            <button className={spbw('btn-game', cls.btn)} onClick={events?.eject} title="Eject">
+                <img src={ejectImg} alt="Eject" className="img-inv" />
             </button>
         </div>
     );
