@@ -13,7 +13,8 @@ import { useEffect } from 'react';
 
 function PanoramaGoogle({ className, getParams, utils, realPos }) {
     const setZoom = (pano, zoom, incr = false) => pano.setZoom(incr ? pano.getZoom() + zoom : zoom);
-    const {getRandomCoords,getPrefGeometry,loadPref,isLoaded} = useJapanRegion();
+    const {getRandomCoords,getRegionGeometry,loadPref,isLoaded} = useJapanRegion();
+    
     useEffect(() => {
         loadPref();
     },[loadPref]);
@@ -35,12 +36,12 @@ function PanoramaGoogle({ className, getParams, utils, realPos }) {
                     disableDefaultUI: true,
                     linksControl: true
                 }}
-                onMount={pano => {
+                onMount={async pano => {
                     const svSvc = new window.google.maps.StreetViewService();
 
-                    function getRandomLocation(n = 1) {
+                    async function getRandomLocation(n = 1) {
                         if (n <= 0) return;
-                        const geometry = getPrefGeometry(getParams.region);
+                        const geometry = await getRegionGeometry(getParams.region, getParams.town);
                         const coords = getRandomCoords(geometry);
                         const location = arrToLLObj(coords);
 
@@ -56,7 +57,7 @@ function PanoramaGoogle({ className, getParams, utils, realPos }) {
                             utils.timer.itvId = setInterval(() => utils.timer.nextSec(), 1000);
                         }).catch((e => e.code === 'ZERO_RESULTS' && getRandomLocation(n - 1)));
                     }
-                    getRandomLocation(10);
+                    await getRandomLocation(10);
 
                     pano.addListener('pov_changed', () => utils.compass.setAngle(360 - pano.getPov().heading));
                     window.addEventListener(eventConfig.gGoToStart, () => pano.setPosition(arrToLLObj(realPos.current)));

@@ -11,6 +11,7 @@ export function useJapanRegion() {
     return prefName.substring(0, 2);
   }
   const loadPref = async () => {
+    if (prefData) return prefData;
     const res = await fetch(prefUrl);
     const data = await res.json();
     setPrefData(data);
@@ -25,9 +26,9 @@ export function useJapanRegion() {
   };
   const getRegionNames = async (prefCode: string) => {
     const options = [
-        ["all", "全域"],
-        ["bigpop", "ランダム（人口多）"],
-        ["smallpop", "ランダム（人口少）"]
+        ["all", "ランダム(全域)"],
+        ["highpop", "ランダム（人口多）"],
+        ["lowpop", "ランダム（人口少）"]
     ];
     if(prefCode === "00") return options;
     const rest = await fetch(`/data/town/${prefCode}.geojson`);
@@ -41,7 +42,7 @@ export function useJapanRegion() {
 
   const getRegionPolygonPaths = async (prefCode: string,detailCode: string = "all") => {
     if (!prefData) return null;
-    if(detailCode.match(/(all|bigpop|smallpop)/)){
+    if(detailCode.match(/(all|highpop|lowpop)/)){
         const feature = prefData.features.find((feature: any) => getPrefCode(feature.properties.adm_code) === prefCode);
         if (!feature) return null;
         return geometryToPolygonPaths(feature.geometry);
@@ -52,11 +53,38 @@ export function useJapanRegion() {
         return geometryToPolygonPaths(feature.geometry);
     }
   };
-  const getPrefGeometry = (prefName: string) => {
-    if (!prefData) return null;
-    const feature = prefData.features.find((feature: any) => feature.properties.nam === prefName);
-    if (!feature) return null;
-    return feature.geometry;
+  const getRegionGeometry = async (prefCode: string,detailCode: string) => {
+    const url = prefCode === "00" ? "/data/pref.geojson" : `/data/town/${prefCode}.geojson`;
+    const regionData = await fetch(url).then(res => res.json());
+    let turfShape : any
+    if(detailCode === "all"){
+        const feature = prefData.features.find((feature: any) => getPrefCode(feature.properties.adm_code) === prefCode);
+        if (!feature) throw new Error("Invalid pref code");
+        turfShape = geometryToTurfShape(feature.geometry);
+    }else if(detailCode === "highpop" || detailCode === "lowpop"){
+        // ランダムで人口が多い地域を当たりやすくしつつgeometryを取得
+        const total_population = regionData.features.reduce((acc: number, feature: any) => acc + Math.max(feature.properties.pop,0), 0);
+        const random = Math.random() * total_population * (detailCode === "highpop" ?  0.3 : 0.1);
+        let sum = 0;
+        let count = 0;
+        const sorted = regionData.features.sort((a: any,b: any)=>Math.max(b.properties.pop,0) - Math.max(a.properties.pop,0));
+        if(detailCode === "lowpop") sorted.reverse();      
+        for(const feature of sorted){
+            //console.log(feature.properties.nam_ja,feature.properties.laa_ja,feature.properties.pop)
+            count++;
+            sum += Math.max(feature.properties.pop,0);
+            if(sum >= random){
+                //console.log("random",random,"sum",sum,"pop",feature.properties.pop,"count",count);
+                turfShape = geometryToTurfShape(feature.geometry);
+                break;
+            }
+        }
+    }else{
+        const feature = regionData.features.find((feature: any) => feature.properties.adm_code === detailCode);
+        if (!feature) return null;
+        turfShape = geometryToTurfShape(feature.geometry);
+    }
+    return turfShape.geometry;
   };
 
   // geojsonのgeometryをgoogle.maps.polygonのpath[]に変換
@@ -72,6 +100,15 @@ export function useJapanRegion() {
       throw new Error("Invalid geometry type");
     }
   };
+  const geometryToTurfShape = (geometry: any) => {
+    if (geometry.type === "Polygon") {
+      return turf.polygon(geometry.coordinates);
+    } else if (geometry.type === "MultiPolygon") {
+      return turf.multiPolygon(geometry.coordinates);
+    } else {
+      throw new Error("Invalid geometry type");
+    }
+  }
   const getRandomCoords = (geometry: any) => {
     if (!geometry) return null;
     //turf.jsを使ってランダムな座標を取得
@@ -97,7 +134,7 @@ export function useJapanRegion() {
     isLoaded,
     getPrefNames: useCallback(getPrefNames, [prefData]),
     getRegionNames: useCallback(getRegionNames, []),
-    getPrefGeometry: useCallback(getPrefGeometry, [prefData]),
+    getRegionGeometry: useCallback(getRegionGeometry, [prefData]),
     getRegionPolygonPaths: useCallback(getRegionPolygonPaths, [prefData]),
     loadPref: useCallback(loadPref, [prefUrl]),
     getRandomCoords: useCallback(getRandomCoords, []),

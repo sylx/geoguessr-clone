@@ -15,7 +15,7 @@ window.addEventListener(eventConfig.gQuit, () => {
 });
 
 function Game() {
-    const getParams = ['region', 'timer', 'compass'].reduce(
+    const getParams = ['region', 'timer', 'compass','town'].reduce(
         (res, curr) => ({
             ...res,
             params: {

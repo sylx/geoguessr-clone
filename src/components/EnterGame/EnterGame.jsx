@@ -105,10 +105,6 @@ function EnterGame({ className }) {
                         <Dropdown className="fieldset-item" optionList={regionNames} name="town" onChange={onChangeTown} />
                     </label>
                     <label className="fieldset-item">
-                        <Checkbox name="manypop" className="checkbox checkbox-mr"/>
-                            人口が多い場所優先
-                    </label>
-                    <label className="fieldset-item">
                         <Checkbox name="compass" className="checkbox checkbox-mr"/>
                         コンパスを表示
                     </label>
