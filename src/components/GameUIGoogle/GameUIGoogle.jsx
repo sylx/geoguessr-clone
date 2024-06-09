@@ -55,7 +55,6 @@ function GameUiGoogle({ classNames, getParams, utils, realPos, guessPos, markers
                                 const bounds = new window.google.maps.LatLngBounds();
                                 geometry.forEach(path=>{
                                     path.forEach(coord=>{
-                                        console.log(coord)
                                         bounds.extend(coord);
                                     })
                                 })

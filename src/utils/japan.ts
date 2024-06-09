@@ -127,24 +127,27 @@ export function useJapanRegion() {
   }
   const getRandomCoords = (geometry: any) => {
     if (!geometry) return null;
-    //turf.jsを使ってランダムな座標を取得
-    let polygon: any;
-    if (geometry.type === "MultiPolygon") {
-      //複数のポリゴンがある場合は一つのポリゴンを選択して、turf.polygonsに変換
-      const key = Math.floor(Math.random() * geometry.coordinates.length);
-      polygon = turf.polygon(geometry.coordinates[key]);
-    } else {
-      polygon = turf.polygon(geometry.coordinates);
+    // ポリゴン内部のランダムな点を生成する関数
+    function getRandomPointInPolygon(polygon) {
+        const bbox = turf.bbox(polygon); // 境界ボックスを取得
+        const area = turf.area(polygon); // ポリゴンの面積を計算
+        const pointsToGenerate = Math.ceil(area/10000); // 面積に基づいて点の数を決定
+        console.log({bbox,polygon,area,pointsToGenerate})
+        const randomPoints = turf.randomPoint(pointsToGenerate, { bbox: bbox }).features;
+        const pointsInside = randomPoints.filter(point => turf.booleanPointInPolygon(point, polygon));
+    
+        if (pointsInside.length > 0) {
+            // ランダムに選んだ点を返す
+            return pointsInside[Math.floor(Math.random() * pointsInside.length)].geometry.coordinates;
+        } else {
+            // ポリゴンが非常に狭い場合の対処
+            return getRandomPointInPolygon(polygon);
+        }
     }
+    const coords=getRandomPointInPolygon(geometry);
+    return coords.reverse();
+  }
 
-    const bbox = turf.bbox(polygon);
-    let randomPoint: [number, number];
-    //領域内にはいるまで繰り返す
-    do {
-      randomPoint = turf.randomPosition(bbox) as [number, number];
-    } while (!turf.booleanPointInPolygon(turf.point(randomPoint), polygon));
-    return randomPoint.reverse();
-  };
 
   return {
     isLoaded,
