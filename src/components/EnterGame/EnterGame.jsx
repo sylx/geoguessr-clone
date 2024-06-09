@@ -10,12 +10,16 @@ import spbw from '../../utils/spbw';
 import gameConfig from '../../config/game.json';
 import cls from './enter-game.module.css';
 import { useJapanRegion } from '../../utils/japan';
+import { MapRegion } from './MapRegion';
+import { Wrapper } from '@googlemaps/react-wrapper';
+import api from '../../config/api';
 
 function EnterGame({ className }) {
     const [pressTimeout, setPressTimeout] = useState(-1);
     const [prefOpened, setPrefOpened] = useState(false);
     const [expOpened, setExpOpened] = useState(false);
-    const {prefData,loadPref} = useJapanRegion();
+    const [geometry, setGeometry] = useState([]);
+    const {isLoaded,getPrefNames,getPrefGeometry,loadPref} = useJapanRegion();
 
     useEffect(() => {
         loadPref();
@@ -39,12 +43,25 @@ function EnterGame({ className }) {
         evt.preventDefault();
     };
 
+    const onChangeRegion = evt => {
+        const paths=getPrefGeometry(evt.target.value);
+        if(paths){
+            setGeometry(paths);
+            console.log("Region changed to",evt.target.value)
+        }else{
+            throw new Error("Region not found");
+        }
+    }
+
     return (
         <div className={spbw(cls.enter_game, className)}>            
             <form action="/game" method="get">
-                { prefData && (
-                <Dropdown className={cls.form_item} optionList={Object.entries(prefData)} name="region" />
+                { isLoaded && (
+                <Dropdown className={cls.form_item} optionList={getPrefNames()} name="region" onChange={onChangeRegion} />
                 )}
+                <Wrapper apiKey={api.googleMapsApiKey}>
+                    <MapRegion className={cls.form_item} geometry={geometry} />
+                </Wrapper>
                 <fieldset hidden={!expOpened} className={spbw('fieldset', cls.form_item)}>
                     <legend className="fieldset-legend">Experiments</legend>
                     Empty :(

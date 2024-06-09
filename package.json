@@ -51,6 +51,7 @@
     ]
   },
   "devDependencies": {
+    "@types/google.maps": "^3.55.9",
     "gh-pages": "^5.0.0",
     "prop-types": "^15.8.1",
     "shx": "^0.3.4"
