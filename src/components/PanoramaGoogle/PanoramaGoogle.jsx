@@ -5,13 +5,21 @@ import Map from '../UI/Map/Map';
 
 import spbw from '../../utils/spbw';
 import arrToLLObj from '../../utils/arr-to-ll-obj';
-import genRandomCoords from '../../utils/random/gen-random-coords';
 
 import api from '../../config/api';
 import eventConfig from '../../config/events.json';
+import { useJapanRegion } from '../../utils/japan';
+import { useEffect } from 'react';
 
 function PanoramaGoogle({ className, getParams, utils, realPos }) {
     const setZoom = (pano, zoom, incr = false) => pano.setZoom(incr ? pano.getZoom() + zoom : zoom);
+    const {getRandomCoords,getPrefGeometry,loadPref,isLoaded} = useJapanRegion();
+    useEffect(() => {
+        loadPref();
+    },[loadPref]);
+
+    if(!isLoaded) return null;
+    
 
     return (
         <Wrapper apiKey={api.googleMapsApiKey}>
@@ -32,8 +40,12 @@ function PanoramaGoogle({ className, getParams, utils, realPos }) {
 
                     function getRandomLocation(n = 1) {
                         if (n <= 0) return;
+                        const geometry = getPrefGeometry(getParams.region);
+                        const coords = getRandomCoords(geometry);
+                        const location = arrToLLObj(coords);
+
                         svSvc.getPanorama({
-                            location: arrToLLObj(genRandomCoords(getParams.region)),
+                            location,
                             radius: 10000
                         }).then(({ data }) => {
                             const loc = data.location;

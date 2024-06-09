@@ -19,11 +19,23 @@ function EnterGame({ className }) {
     const [prefOpened, setPrefOpened] = useState(false);
     const [expOpened, setExpOpened] = useState(false);
     const [geometry, setGeometry] = useState([]);
-    const {isLoaded,getPrefNames,getPrefGeometry,loadPref} = useJapanRegion();
+    const {isLoaded,getPrefNames,getRegionPolygonPaths,loadPref} = useJapanRegion();
 
     useEffect(() => {
-        loadPref();
+        loadPref()
     },[loadPref]);
+
+    useEffect(() => {
+        const prefNames = getPrefNames();
+        if(prefNames.length>0){
+            const firstPref = prefNames[0][0]
+            const paths=getRegionPolygonPaths(firstPref);
+            if(paths){
+                setGeometry(paths);
+                console.log("Region changed to",firstPref)
+            }
+        }        
+    },[getPrefNames]);
 
     const prefBtnDown = () => {
         setPressTimeout(setTimeout(() => {
@@ -44,7 +56,7 @@ function EnterGame({ className }) {
     };
 
     const onChangeRegion = evt => {
-        const paths=getPrefGeometry(evt.target.value);
+        const paths=getRegionPolygonPaths(evt.target.value);
         if(paths){
             setGeometry(paths);
             console.log("Region changed to",evt.target.value)
@@ -52,6 +64,8 @@ function EnterGame({ className }) {
             throw new Error("Region not found");
         }
     }
+
+    if (!isLoaded) return null;
 
     return (
         <div className={spbw(cls.enter_game, className)}>            
