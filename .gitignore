@@ -25,3 +25,5 @@ yarn-error.log*
 
 /.venv
 /japan-polygon/gm-jpn-bnd_u_2_1
+
+.env
