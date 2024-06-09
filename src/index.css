@@ -101,6 +101,9 @@ button, input, textarea {
     display: block;
     height: 1.5em;
 }
+.fieldset-item.large{
+    height: 3em;
+}
 .fieldset-legend {
     padding: 0 10px;
 }

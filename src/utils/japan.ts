@@ -6,6 +6,10 @@ export function useJapanRegion() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   const prefUrl = "/data/pref.geojson";
+
+  const getPrefCode = (prefName: string) => {
+    return prefName.substring(0, 2);
+  }
   const loadPref = async () => {
     const res = await fetch(prefUrl);
     const data = await res.json();
@@ -15,13 +19,38 @@ export function useJapanRegion() {
   };
   const getPrefNames = () => {
     if (!prefData) return [];
-    return prefData.features.map((feature: any) => [feature.properties.nam, feature.properties.nam]);
+    return prefData.features
+        .sort((a: any,b:any)=>parseInt(a.properties.adm_code) - parseInt(b.properties.adm_code))
+        .map((feature: any) => [getPrefCode(feature.properties.adm_code), feature.properties.nam_ja]);
   };
-  const getRegionPolygonPaths = (prefName: string) => {
+  const getRegionNames = async (prefCode: string) => {
+    const options = [
+        ["all", "全域"],
+        ["bigpop", "ランダム（人口多）"],
+        ["smallpop", "ランダム（人口少）"]
+    ];
+    if(prefCode === "00") return options;
+    const rest = await fetch(`/data/town/${prefCode}.geojson`);
+    const data = await rest.json();
+    data.features
+        .sort((a: any,b:any)=>parseInt(a.properties.adm_code) - parseInt(b.properties.adm_code))
+        .map((feature: any) => [feature.properties.adm_code, feature.properties.laa_ja]).forEach(option=>options.push(option));
+    console.log(options)
+    return options;
+  };
+
+  const getRegionPolygonPaths = async (prefCode: string,detailCode: string = "all") => {
     if (!prefData) return null;
-    const feature = prefData.features.find((feature: any) => feature.properties.nam === prefName);
-    if (!feature) return null;
-    return geometryToPolygonPaths(feature.geometry);
+    if(detailCode.match(/(all|bigpop|smallpop)/)){
+        const feature = prefData.features.find((feature: any) => getPrefCode(feature.properties.adm_code) === prefCode);
+        if (!feature) return null;
+        return geometryToPolygonPaths(feature.geometry);
+    } else {
+        const regionData = await fetch(`/data/town/${prefCode}.geojson`).then(res => res.json());
+        const feature = regionData.features.find((feature: any) => feature.properties.adm_code === detailCode);
+        if (!feature) return null;
+        return geometryToPolygonPaths(feature.geometry);
+    }
   };
   const getPrefGeometry = (prefName: string) => {
     if (!prefData) return null;
@@ -67,6 +96,7 @@ export function useJapanRegion() {
   return {
     isLoaded,
     getPrefNames: useCallback(getPrefNames, [prefData]),
+    getRegionNames: useCallback(getRegionNames, []),
     getPrefGeometry: useCallback(getPrefGeometry, [prefData]),
     getRegionPolygonPaths: useCallback(getRegionPolygonPaths, [prefData]),
     loadPref: useCallback(loadPref, [prefUrl]),

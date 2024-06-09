@@ -19,7 +19,8 @@ function EnterGame({ className }) {
     const [prefOpened, setPrefOpened] = useState(false);
     const [expOpened, setExpOpened] = useState(false);
     const [geometry, setGeometry] = useState([]);
-    const {isLoaded,getPrefNames,getRegionPolygonPaths,loadPref} = useJapanRegion();
+    const [regionNames, setRegionNames] = useState([]);
+    const {isLoaded,getPrefNames,getRegionNames,getRegionPolygonPaths,loadPref} = useJapanRegion();
 
     useEffect(() => {
         loadPref()
@@ -29,11 +30,15 @@ function EnterGame({ className }) {
         const prefNames = getPrefNames();
         if(prefNames.length>0){
             const firstPref = prefNames[0][0]
-            const paths=getRegionPolygonPaths(firstPref);
-            if(paths){
-                setGeometry(paths);
-                console.log("Region changed to",firstPref)
-            }
+            getRegionPolygonPaths(firstPref).then(paths=>{
+                if(paths){
+                    getRegionNames(firstPref).then(regionNames=>
+                        setRegionNames(regionNames)
+                    );
+                    setGeometry(paths);
+                    console.log("Region changed to",firstPref)
+                }
+            });
         }        
     },[getPrefNames]);
 
@@ -55,14 +60,28 @@ function EnterGame({ className }) {
         evt.preventDefault();
     };
 
-    const onChangeRegion = evt => {
-        const paths=getRegionPolygonPaths(evt.target.value);
+    const onChangePrefecture = async (evt) => {
+        const paths=await getRegionPolygonPaths(evt.target.value);
         if(paths){
+            const regionNames = await getRegionNames(evt.target.value);
+            setRegionNames(regionNames);
             setGeometry(paths);
-            console.log("Region changed to",evt.target.value)
         }else{
             throw new Error("Region not found");
         }
+    }
+
+    const onChangeTown = async (evt) => {
+        // get form element
+        const formEl = evt.target.form;
+        const regionValue = formEl.querySelector("[name=region]").value
+        const paths=await getRegionPolygonPaths(regionValue,evt.target.value);
+        if(paths){
+            setGeometry(paths);
+        }else{
+            throw new Error("Region not found");
+        }
+
     }
 
     if (!isLoaded) return null;
@@ -71,7 +90,7 @@ function EnterGame({ className }) {
         <div className={spbw(cls.enter_game, className)}>            
             <form action="/game" method="get">
                 { isLoaded && (
-                <Dropdown className={cls.form_item} optionList={getPrefNames()} name="region" onChange={onChangeRegion} />
+                <Dropdown className={cls.form_item} optionList={getPrefNames()} name="region" onChange={onChangePrefecture} />
                 )}
                 <Wrapper apiKey={api.googleMapsApiKey}>
                     <MapRegion className={cls.form_item} geometry={geometry} />
@@ -81,14 +100,21 @@ function EnterGame({ className }) {
                     Empty :(
                 </fieldset>
                 <fieldset hidden={!prefOpened} className={spbw('fieldset', cls.form_item)}>
-                    <legend className="fieldset-legend">Preferences</legend>
+                    <legend className="fieldset-legend">詳細設定</legend>
+                    <label className="fieldset-item large">
+                        <Dropdown className="fieldset-item" optionList={regionNames} name="town" onChange={onChangeTown} />
+                    </label>
+                    <label className="fieldset-item">
+                        <Checkbox name="manypop" className="checkbox checkbox-mr"/>
+                            人口が多い場所優先
+                    </label>
                     <label className="fieldset-item">
                         <Checkbox name="compass" className="checkbox checkbox-mr"/>
-                        Compass
+                        コンパスを表示
                     </label>
                     <label className="fieldset-item">
                         <Checkbox name="timer" defaultChecked={true} className="checkbox checkbox-mr"/>
-                        Timer
+                        タイマーを表示
                     </label>
                 </fieldset>
                 <div className={cls.form_item}>
@@ -98,7 +124,7 @@ function EnterGame({ className }) {
                         onClick={prefBtnClick}
                         onContextMenu={() => false}
                     >
-                        Preferences...
+                        詳細設定
                     </Button>
                 </div>
                 <div className={cls.form_item}>
