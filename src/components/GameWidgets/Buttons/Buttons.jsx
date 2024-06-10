@@ -12,19 +12,19 @@ import cls from './buttons.module.css';
 function Buttons({ events }) {
     return (
         <div className="widget-group">
-            <button className={spbw('btn-game', cls.btn)} onClick={events?.quit} title="Quit">
+            <button className={spbw('btn-game', cls.btn)} onClick={events?.quit} title="やめる">
                 <img src={quitImg} alt="X" className="img-inv" />
             </button>
-            <button className={spbw('btn-game', cls.btn)} onClick={events?.goToStart} title="Go to the Start">
+            <button className={spbw('btn-game', cls.btn)} onClick={events?.goToStart} title="スタート地点に戻る">
                 <img src={flagImg} alt="Flag" className="img-inv" />
             </button>
-            <button className={spbw('btn-game', cls.btn)} onClick={events?.zoomIn} title="Zoom In">
+            <button className={spbw('btn-game', cls.btn)} onClick={events?.zoomIn} title="ズームイン">
                 <img src={zoomInImg} alt="+" className="img-inv" />
             </button>
-            <button className={spbw('btn-game', cls.btn)} onClick={events?.zoomOut} title="Zoom Out">
+            <button className={spbw('btn-game', cls.btn)} onClick={events?.zoomOut} title="ズームアウト">
                 <img src={zoomOutImg} alt="-" className="img-inv" />
             </button>
-            <button className={spbw('btn-game', cls.btn)} onClick={events?.eject} title="Eject">
+            <button className={spbw('btn-game', cls.btn)} onClick={events?.eject} title="外に出る（店の中から出れない時に）">
                 <img src={ejectImg} alt="Eject" className="img-inv" />
             </button>
         </div>
