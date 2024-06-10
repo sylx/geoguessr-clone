@@ -13,6 +13,8 @@ import calcPoints from '../../utils/calc/calc-points';
 
 import gameConfig from '../../config/game.json';
 import cls from './game-results.module.css';
+import { useEffect,useState } from 'react';
+import { useJapanRegion } from '../../utils/japan';
 
 const formulas = `
 You can scroll this message.
@@ -47,10 +49,13 @@ Floor - Rounding Down
 "TPE Multiplier" is the effect coefficient: the greater its value, the more points are deducted
 `;
 
-function GameResults({ className, map, data }) {
+function GameResults({ className, map, data,getParams,info }) {
     const cutCoords = a => a.map(el => strCut(el.toString(), 7)).join(',');
+
+    if(!info) return null
+
     const dst = calcGeoDistance(data.guessPos, data.realPos)
-    const acc = calcAccuracy(dst);
+    const acc = calcAccuracy(dst,info.longest);
 
     return (
         <div className={spbw(className, cls.results)}>
@@ -59,14 +64,13 @@ function GameResults({ className, map, data }) {
                     <h2 className="title title-center section-title">Results</h2>
                     <div className={cls.map}>{map}</div>
                     <div className={cls.main}>
-                        <div>
-                            <p className={cls.col}>
-                                Region: <span className={cls.val}>{gameConfig.regionNames[data.region]}</span>
-                            </p>
+                        <div className={cls.row}>
+                            <p className={cls.col}>対象地域:: <span className={cls.val}>{info.name}</span></p>
+                            <p className={cls.col}>域内最大距離: <span className={cls.val}>{readableDistance(info.longest)}</span></p>
                         </div>
                         <div className={cls.row}>
                             <p className={cls.col}>
-                                Guess position:
+                                予想位置:
                                 <a
                                     href={geoUrl(data.guessPos)}
                                     target="_blank"
@@ -76,7 +80,7 @@ function GameResults({ className, map, data }) {
                                 </a>
                             </p>
                             <p className={cls.col}>
-                                Real position:
+                                正解位置:
                                 <a
                                     href={geoUrl(data.realPos)}
                                     target="_blank"
@@ -87,13 +91,18 @@ function GameResults({ className, map, data }) {
                             </p>
                         </div>
                         <div className={cls.row}>
-                            <p className={cls.col}>Distance: <span>{readableDistance(dst)}</span></p>
-                            <p className={cls.col}>Time: <span>{readableTime(data.time)}</span></p>
+                            <p className={cls.col}>距離: <span className={cls.val}>{readableDistance(dst)}</span></p>
+                            <p className={cls.col}>時間: <span className={cls.val}>{readableTime(data.time)}</span></p>
                         </div>
                         <div className={cls.row}>
-                            <p className={cls.col}>Guess accuracy: <span>{readablePercentage(acc)}</span></p>
-                            <p className={cls.col}>Points: <span>{calcPoints(acc, data.time)}</span></p>
+                            <p className={cls.col}>位置の正確さ: <span className={cls.strong}>{readablePercentage(acc)}</span></p>
+                            <p className={cls.col}>スコア: <span className={cls.strong}>{calcPoints(acc, data.time)}</span></p>
                         </div>
+                        <div className={cls.row}>
+                            <p className={cls.col}><a href="#" className={cls.button} onClick={(e) => { e.preventDefault();window.location.reload();}}>同じ設定でもう一度</a></p>
+                            <p className={cls.col}><a href="#" className={cls.button} onClick={(e) => { e.preventDefault();window.location.href="/"; }}>最初の画面に戻る</a></p>                            
+                        </div>
+
                         <div className={cls.row}>
                             <p className={cls.col}>
                                 {/* eslint-disable-next-line */}

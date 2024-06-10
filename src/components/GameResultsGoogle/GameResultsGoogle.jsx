@@ -11,10 +11,24 @@ import guessPin from '../../assets/img/guess-pin.png';
 import realPin from '../../assets/img/real-pin.png';
 
 import api from '../../config/api';
+import { useEffect,useState } from 'react';
+import { useJapanRegion } from '../../utils/japan';
 
 function GameResultsGoogle({ classNames, getParams, utils, realPos, guessPos, markers }) {
+    const [info, setInfo] = useState(null);
+    const { loadPref,getRegionInfo,setRegionBoundsToMap } = useJapanRegion();
+    useEffect(() => {
+        console.log("come")
+        loadPref().then(()=>getRegionInfo(getParams.region,getParams.town)).then(info => {
+            setInfo(info)
+            console.log("info",info)
+        });
+    },[])
+
     return (
         <GameResults
+            getParams={getParams}
+            info={info}
             data={{
                 region: getParams.region,
                 realPos: realPos.current,
@@ -22,7 +36,7 @@ function GameResultsGoogle({ classNames, getParams, utils, realPos, guessPos, ma
                 guessPos
             }}
             map={<Wrapper apiKey={api.googleMapsApiKey}>
-                <Map
+                { info && <Map
                     className={classNames.minimap}
                     options={{
                         center: {lat: 0, lng: 0},
@@ -30,10 +44,11 @@ function GameResultsGoogle({ classNames, getParams, utils, realPos, guessPos, ma
                         zoom: 1,
                         disableDefaultUI: true
                     }}
-                    onMount={map => {
+                    onMount={async map => {
                         markers.removeAllPins();
                         markers.placePin(map, arrToLLObj(guessPos), guessPin, geoUrl(guessPos));
                         markers.placePin(map, arrToLLObj(realPos.current), realPin, geoUrl(realPos.current));
+                        await setRegionBoundsToMap(map, "00","all")
 
                         let mapLoaded = false;
 
@@ -47,7 +62,7 @@ function GameResultsGoogle({ classNames, getParams, utils, realPos, guessPos, ma
                             mapLoaded = true;
                         });
                     }}
-                />
+                /> }
             </Wrapper>}
         />
     );

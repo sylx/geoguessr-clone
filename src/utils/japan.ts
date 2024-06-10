@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import * as turf from "@turf/turf";
 
 export function useJapanRegion() {
@@ -53,22 +53,40 @@ export function useJapanRegion() {
         return geometryToPolygonPaths(feature.geometry);
     }
   };
-  const getRegionName = async (prefCode: string,detailCode: string) => {
-    if (!prefData) return "";
-    const feature = prefData.features.find((feature: any) => getPrefCode(feature.properties.adm_code) === prefCode);
-    if (!feature) return "";
-    const prefName = prefCode === "00" ? "日本" : feature.properties.nam_ja;
-    let detailName = "";
-    if(detailCode === "all" || detailCode === "highpop" || detailCode === "lowpop"){
-        detailName = "";
-    }else {
+  const getRegionInfo = async (prefCode: string,detailCode: string) => {
+    let name = "";
+    if(detailCode.match(/(all|highpop|lowpop)/)){
+        const feature = prefData.features.find((feature: any) => getPrefCode(feature.properties.adm_code) === prefCode);
+        if (!feature) return null;
+        name = feature.properties.nam_ja
+    } else {
         const regionData = await fetch(`/data/town/${prefCode}.geojson`).then(res => res.json());
         const feature = regionData.features.find((feature: any) => feature.properties.adm_code === detailCode);
-        if (!feature) return "";
-        detailName = feature.properties.laa_ja;
+        if (!feature) return null;
+        name = feature.properties.nam_ja + feature.properties.laa_ja
     }
-    return `${prefName}${detailName}のどこか`
-  };
+    const geometry = await getRegionGeometry(prefCode,detailCode);
+    //bboxの対角線の長さを計算
+    const bbox = turf.bbox(geometry);
+    const diagonal = turf.distance(bbox.slice(0, 2), bbox.slice(2, 4), { units: "meters" });
+    return {
+      name,
+      longest: diagonal
+    }
+  }
+
+  const setRegionBoundsToMap= async (map: google.maps.Map, prefCode: string,detailCode: string) =>{
+    const paths = await getRegionPolygonPaths(prefCode,detailCode);
+    if (!paths) return;
+    const bounds = new google.maps.LatLngBounds();
+    paths.forEach(path=>{
+        path.forEach(coord=>{
+            bounds.extend(coord);
+        })
+    })
+    map.fitBounds(bounds);
+  }
+  
   const getRegionGeometry = async (prefCode: string,detailCode: string) => {
     const url = prefCode === "00" ? "/data/pref.geojson" : `/data/town/${prefCode}.geojson`;
     const regionData = await fetch(url).then(res => res.json());
@@ -153,9 +171,10 @@ export function useJapanRegion() {
     isLoaded,
     getPrefNames: useCallback(getPrefNames, [prefData]),
     getRegionNames: useCallback(getRegionNames, []),
-    getRegionName: useCallback(getRegionName, [prefData]),
+    getRegionInfo: useCallback(getRegionInfo, [prefData]),
     getRegionGeometry: useCallback(getRegionGeometry, [prefData]),
     getRegionPolygonPaths: useCallback(getRegionPolygonPaths, [prefData]),
+    setRegionBoundsToMap: useCallback(setRegionBoundsToMap, [prefData]),
     loadPref: useCallback(loadPref, [prefUrl]),
     getRandomCoords: useCallback(getRandomCoords, []),
   };

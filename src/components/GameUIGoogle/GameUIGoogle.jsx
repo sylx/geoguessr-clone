@@ -16,19 +16,19 @@ import { useEffect,useState } from 'react';
 
 function GameUiGoogle({ classNames, getParams, utils, realPos, guessPos, markers, setGuessPos, setGameEnd }) {
     const [label, setLabel] = useState({region: ''});
-    const {isLoaded,loadPref,getRegionPolygonPaths,getRegionName} = useJapanRegion();
+    const {isLoaded,loadPref,getRegionPolygonPaths,getRegionInfo} = useJapanRegion();
     
     useEffect(() => {
         loadPref()
     },[loadPref]);
 
     useEffect(() => {
-        getRegionName(getParams.region,getParams.town).then(name=>{
+        getRegionInfo(getParams.region,getParams.town).then(info=>{
             setLabel({
-                region: name,
+                region: info.name,
             });
         });
-    },[getParams.region,getRegionName]);
+    },[getParams.region,getParams.town,getRegionInfo]);
 
     if(!isLoaded) return null;
     return (
