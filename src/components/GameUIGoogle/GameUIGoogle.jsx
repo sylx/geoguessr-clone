@@ -20,17 +20,19 @@ function GameUiGoogle({ classNames, getParams, utils, realPos, guessPos, markers
     
     useEffect(() => {
         loadPref()
-    },[loadPref]);
+    },[]);
 
     useEffect(() => {
-        getRegionInfo(getParams.region,getParams.town).then(info=>{
+        if(!isLoaded) return;
+        getRegionInfo(getParams.region,getParams.town).then(info => {
             setLabel({
                 region: info.name,
             });
-        });
-    },[getParams.region,getParams.town,getRegionInfo]);
+        })
+    },[isLoaded])
 
     if(!isLoaded) return null;
+
     return (
         <GameUI
             className={classNames?.game_ui}

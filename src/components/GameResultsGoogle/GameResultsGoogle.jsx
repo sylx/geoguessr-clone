@@ -16,14 +16,17 @@ import { useJapanRegion } from '../../utils/japan';
 
 function GameResultsGoogle({ classNames, getParams, utils, realPos, guessPos, markers }) {
     const [info, setInfo] = useState(null);
-    const { loadPref,getRegionInfo,setRegionBoundsToMap } = useJapanRegion();
+    const { loadPref,isLoaded,getRegionInfo,setRegionBoundsToMap } = useJapanRegion();
     useEffect(() => {
-        console.log("come")
-        loadPref().then(()=>getRegionInfo(getParams.region,getParams.town)).then(info => {
+        loadPref()
+    },[]);
+
+    useEffect(() => {
+        if(!isLoaded) return;
+        getRegionInfo(getParams.region,getParams.town).then(info => {
             setInfo(info)
-            console.log("info",info)
         });
-    },[])
+    },[isLoaded])
 
     return (
         <GameResults

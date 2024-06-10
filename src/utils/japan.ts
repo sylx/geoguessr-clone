@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import * as turf from "@turf/turf";
 
 export function useJapanRegion() {
@@ -11,7 +11,7 @@ export function useJapanRegion() {
     return prefName.substring(0, 2);
   }
   const loadPref = async () => {
-    if (prefData) return prefData;
+    if(prefData) return prefData;
     const res = await fetch(prefUrl);
     const data = await res.json();
     setPrefData(data);
@@ -55,6 +55,7 @@ export function useJapanRegion() {
   };
   const getRegionInfo = async (prefCode: string,detailCode: string) => {
     let name = "";
+    if(!prefData) throw new Error("prefData is not loaded");
     if(detailCode.match(/(all|highpop|lowpop)/)){
         const feature = prefData.features.find((feature: any) => getPrefCode(feature.properties.adm_code) === prefCode);
         if (!feature) return null;
@@ -71,7 +72,7 @@ export function useJapanRegion() {
     const diagonal = turf.distance(bbox.slice(0, 2), bbox.slice(2, 4), { units: "meters" });
     return {
       name,
-      longest: diagonal
+      longest: diagonal / (prefCode === "00" ? 16 : 4), //日本全国だと当てずっぽうでも高得点になるので、短くする
     }
   }
 
@@ -148,19 +149,12 @@ export function useJapanRegion() {
     // ポリゴン内部のランダムな点を生成する関数
     function getRandomPointInPolygon(polygon) {
         const bbox = turf.bbox(polygon); // 境界ボックスを取得
-        const area = turf.area(polygon); // ポリゴンの面積を計算
-        const pointsToGenerate = Math.ceil(area/10000); // 面積に基づいて点の数を決定
-        console.log({bbox,polygon,area,pointsToGenerate})
-        const randomPoints = turf.randomPoint(pointsToGenerate, { bbox: bbox }).features;
-        const pointsInside = randomPoints.filter(point => turf.booleanPointInPolygon(point, polygon));
-    
-        if (pointsInside.length > 0) {
-            // ランダムに選んだ点を返す
-            return pointsInside[Math.floor(Math.random() * pointsInside.length)].geometry.coordinates;
-        } else {
-            // ポリゴンが非常に狭い場合の対処
-            return getRandomPointInPolygon(polygon);
+        const points = turf.randomPoint(1, { bbox: bbox });
+        const point = points.features[0].geometry
+        if(turf.booleanPointInPolygon(point, polygon)) {
+          return point.coordinates;
         }
+        return getRandomPointInPolygon(polygon);  
     }
     const coords=getRandomPointInPolygon(geometry);
     return coords.reverse();
